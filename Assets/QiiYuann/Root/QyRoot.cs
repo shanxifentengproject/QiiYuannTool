@@ -4,5 +4,8 @@ using UnityEngine;
 
 public class QyRoot : MonoBehaviour
 {
-
+    public void SetActive(GameObject obj, bool isActive)
+    {
+        QyFun.SetActive(obj, isActive);
+    }
 }
