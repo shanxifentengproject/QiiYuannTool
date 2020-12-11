@@ -13,13 +13,32 @@ public class QyFtUiToUGUI : MonoBehaviour
     public enum ImgType
     {
         RawImage = 0,
-        NunRawImage = 1,
+        NumRawImage = 1,
         Text = 2,
         Image = 3,
+        Button = 4,
     }
     public ImgType m_ImgType;
     public Sprite m_ImgSprite;
     public Color m_Color = Color.white;
+    [System.Serializable]
+    public class UVData
+    {
+        [Range(1, 100)]
+        public int uvX = 1;
+        [Range(1, 100)]
+        public int uvY = 1;
+        public float GetUvOffsetX()
+        {
+            return 1f / uvX;
+        }
+        public float GetUvOffsetY()
+        {
+            return 1f / uvY;
+        }
+    }
+    public UVData m_UVData;
+
     void OnDrawGizmosSelected()
     {
         if (IsAdd)
@@ -35,11 +54,12 @@ public class QyFtUiToUGUI : MonoBehaviour
         {
             case ImgType.RawImage:
             case ImgType.Image:
+            case ImgType.Button:
                 {
                     FtUiToUGUI(transform);
                     break;
                 }
-            case ImgType.NunRawImage:
+            case ImgType.NumRawImage:
                 {
                     for (int i = 0; i < transform.childCount; i++)
                     {
@@ -87,11 +107,11 @@ public class QyFtUiToUGUI : MonoBehaviour
             }
         }
 
-        Text3dEx text3dCom = textCom.GetComponent<Text3dEx>();
-        if (text3dCom == null)
-        {
-            textCom.gameObject.AddComponent<Text3dEx>();
-        }
+        //Text3dEx text3dCom = textCom.GetComponent<Text3dEx>();
+        //if (text3dCom == null)
+        //{
+        //    textCom.gameObject.AddComponent<Text3dEx>();
+        //}
     }
 
     void FtUiToUGUI(Transform tr)
@@ -101,13 +121,24 @@ public class QyFtUiToUGUI : MonoBehaviour
             return;
         }
 
-        if (m_ImgType == ImgType.Image)
+        switch(m_ImgType)
         {
-            ChangeToImage(tr);
-        }
-        else
-        {
-            ChangeToRawImage(tr);
+            case ImgType.Image:
+                {
+                    ChangeToImage(tr);
+                    break;
+                }
+            case ImgType.RawImage:
+            case ImgType.NumRawImage:
+                {
+                    ChangeToRawImage(tr);
+                    break;
+                }
+            case ImgType.Button:
+                {
+                    AddToButtonCom(tr);
+                    break;
+                }
         }
     }
 
@@ -116,19 +147,25 @@ public class QyFtUiToUGUI : MonoBehaviour
         Image img = tr.GetComponent<Image>();
         if (img == null && m_ImgSprite != null)
         {
+            RawImage rawImg = tr.gameObject.GetComponent<RawImage>();
+            if (rawImg != null)
+            {
+                DestroyImmediate(rawImg);
+            }
+
             img = tr.gameObject.AddComponent<Image>();
-            img.rectTransform.localPosition = Vector3.zero;
-            img.rectTransform.localEulerAngles = Vector3.zero;
-            img.rectTransform.localScale = Vector3.one;
-            img.type = Image.Type.Filled;
-            img.fillMethod = Image.FillMethod.Horizontal;
             MeshRenderer meshRender = img.GetComponent<MeshRenderer>();
             if (meshRender != null)
             {
-                img.sprite = m_ImgSprite;
+                img.rectTransform.localPosition = Vector3.zero;
+                img.rectTransform.localEulerAngles = Vector3.zero;
+                img.rectTransform.localScale = Vector3.one;
                 img.rectTransform.sizeDelta = new Vector2(m_ImgSprite.rect.width, m_ImgSprite.rect.height);
                 DestroyImmediate(meshRender);
             }
+            img.type = Image.Type.Filled;
+            img.fillMethod = Image.FillMethod.Horizontal;
+            img.sprite = m_ImgSprite;
 
             MeshFilter meshFilter = img.GetComponent<MeshFilter>();
             if (meshFilter != null)
@@ -141,6 +178,8 @@ public class QyFtUiToUGUI : MonoBehaviour
     void ChangeToRawImage(Transform tr)
     {
         RawImage rawImg = tr.GetComponent<RawImage>();
+        float rectWidthOffset = 1f;
+        float rectHeightOffset = 1f;
         if (rawImg == null)
         {
             rawImg = tr.gameObject.AddComponent<RawImage>();
@@ -150,18 +189,26 @@ public class QyFtUiToUGUI : MonoBehaviour
             MeshRenderer meshRender = rawImg.GetComponent<MeshRenderer>();
             if (meshRender != null && meshRender.sharedMaterial != null)
             {
-                float rectWidthOffset = 1f;
                 switch (m_ImgType)
                 {
                     case ImgType.RawImage:
                         {
-                            rawImg.uvRect = new Rect(0f, 0f, 1f, 1f);
+                            float widthVal = m_UVData.GetUvOffsetX();
+                            float heightVal = m_UVData.GetUvOffsetY();
+                            rectWidthOffset = widthVal;
+                            rectHeightOffset = heightVal;
+                            rawImg.uvRect = new Rect(0f, 0f, widthVal, heightVal);
                             break;
                         }
-                    case ImgType.NunRawImage:
+                    case ImgType.NumRawImage:
                         {
-                            rectWidthOffset = 0.1f;
-                            rawImg.uvRect = new Rect(0f, 0f, 0.1f, 1f);
+                            float widthVal = m_UVData.GetUvOffsetX();
+                            float heightVal = m_UVData.GetUvOffsetY();
+                            rectWidthOffset = widthVal;
+                            rectHeightOffset = heightVal;
+                            rawImg.uvRect = new Rect(0f, 0f, widthVal, heightVal);
+                            //rectWidthOffset = 0.1f;
+                            //rawImg.uvRect = new Rect(0f, 0f, 0.1f, 1f);
                             break;
                         }
                 }
@@ -173,7 +220,7 @@ public class QyFtUiToUGUI : MonoBehaviour
                         rawImg.color = m_Color;
                     }
                     rawImg.texture = meshRender.sharedMaterial.mainTexture;
-                    rawImg.rectTransform.sizeDelta = new Vector2(rectWidthOffset * rawImg.texture.width, rawImg.texture.height);
+                    rawImg.rectTransform.sizeDelta = new Vector2(rectWidthOffset * rawImg.texture.width, rectHeightOffset * rawImg.texture.height);
                 }
                 DestroyImmediate(meshRender);
             }
@@ -183,6 +230,45 @@ public class QyFtUiToUGUI : MonoBehaviour
             {
                 DestroyImmediate(meshFilter);
             }
+        }
+        else
+        {
+            switch (m_ImgType)
+            {
+                case ImgType.RawImage:
+                    {
+                        float widthVal = m_UVData.GetUvOffsetX();
+                        float heightVal = m_UVData.GetUvOffsetY();
+                        rectWidthOffset = widthVal;
+                        rectHeightOffset = heightVal;
+                        rawImg.uvRect = new Rect(0f, 0f, widthVal, heightVal);
+                        break;
+                    }
+                case ImgType.NumRawImage:
+                    {
+                        float widthVal = m_UVData.GetUvOffsetX();
+                        float heightVal = m_UVData.GetUvOffsetY();
+                        rectWidthOffset = widthVal;
+                        rectHeightOffset = heightVal;
+                        rawImg.uvRect = new Rect(0f, 0f, widthVal, heightVal);
+                        //rectWidthOffset = 0.1f;
+                        //rawImg.uvRect = new Rect(0f, 0f, 0.1f, 1f);
+                        break;
+                    }
+            }
+            rawImg.rectTransform.sizeDelta = new Vector2(rectWidthOffset * rawImg.texture.width, rectHeightOffset * rawImg.texture.height);
+        }
+    }
+
+    /// <summary>
+    /// 添加按键组件
+    /// </summary>
+    void AddToButtonCom(Transform tr)
+    {
+        Button btCom = tr.GetComponent<Button>();
+        if (btCom == null)
+        {
+            tr.gameObject.AddComponent<Button>();
         }
     }
 #endif
