@@ -18,7 +18,7 @@ class QyCreateObject
             return null;
         }
 
-        GameObject obj = Object.Instantiate(prefab);
+        GameObject obj = (GameObject)Object.Instantiate(prefab);
         if (parent != null)
         {
             obj.transform.SetParent(parent);

@@ -78,6 +78,7 @@ public class QyFtUiToUGUI : MonoBehaviour
         }
     }
 
+    public TextAnchor m_Alignment = TextAnchor.MiddleLeft;
     void FtUiTextMeshToTextUi(Transform tr)
     {
         if (tr == null)
@@ -88,22 +89,43 @@ public class QyFtUiToUGUI : MonoBehaviour
         Text textCom = tr.GetComponent<Text>();
         if (textCom == null)
         {
-            textCom = tr.gameObject.AddComponent<Text>();
-            textCom.rectTransform.localPosition = Vector3.zero;
-            textCom.rectTransform.localEulerAngles = Vector3.zero;
-            textCom.rectTransform.localScale = Vector3.one;
-            TextMesh textMesh = textCom.GetComponent<TextMesh>();
-            if (textMesh != null)
+            bool isFingTMPro = false;
+#if TMPro
+            TMPro.TextMeshProUGUI tmpText = tr.GetComponent<TMPro.TextMeshProUGUI>();
+            if (tmpText != null)
             {
-                textCom.text = textMesh.text;
-                m_Color = textCom.color = textMesh.color;
-                DestroyImmediate(textMesh);
-            }
+                isFingTMPro = true;
+                m_Color = tmpText.color;
+                string textVal = tmpText.text;
+                int fontSize = (int)tmpText.fontSize;
+                DestroyImmediate(tmpText);
 
-            MeshRenderer meshRender = textCom.GetComponent<MeshRenderer>();
-            if (meshRender != null)
+                textCom = tr.gameObject.AddComponent<Text>();
+                textCom.color = m_Color;
+                textCom.text = textVal;
+                textCom.fontSize = fontSize;
+                textCom.alignment = m_Alignment;
+            }
+#endif
+            if (!isFingTMPro)
             {
-                DestroyImmediate(meshRender);
+                textCom = tr.gameObject.AddComponent<Text>();
+                textCom.rectTransform.localPosition = Vector3.zero;
+                textCom.rectTransform.localEulerAngles = Vector3.zero;
+                textCom.rectTransform.localScale = Vector3.one;
+                TextMesh textMesh = textCom.GetComponent<TextMesh>();
+                if (textMesh != null)
+                {
+                    textCom.text = textMesh.text;
+                    m_Color = textCom.color = textMesh.color;
+                    DestroyImmediate(textMesh);
+                }
+
+                MeshRenderer meshRender = textCom.GetComponent<MeshRenderer>();
+                if (meshRender != null)
+                {
+                    DestroyImmediate(meshRender);
+                }
             }
         }
 
@@ -202,13 +224,21 @@ public class QyFtUiToUGUI : MonoBehaviour
                         }
                     case ImgType.NumRawImage:
                         {
-                            float widthVal = m_UVData.GetUvOffsetX();
-                            float heightVal = m_UVData.GetUvOffsetY();
-                            rectWidthOffset = widthVal;
-                            rectHeightOffset = heightVal;
-                            rawImg.uvRect = new Rect(0f, 0f, widthVal, heightVal);
-                            //rectWidthOffset = 0.1f;
-                            //rawImg.uvRect = new Rect(0f, 0f, 0.1f, 1f);
+                            if (m_UVData.uvX == 1 && m_UVData.uvY == 1)
+                            {
+                                //默认为横向10个数字
+                                rectWidthOffset = 0.1f;
+                                rawImg.uvRect = new Rect(0f, 0f, 0.1f, 1f);
+                            }
+                            else
+                            {
+                                //可以是横向或纵向结合的数字
+                                float widthVal = m_UVData.GetUvOffsetX();
+                                float heightVal = m_UVData.GetUvOffsetY();
+                                rectWidthOffset = widthVal;
+                                rectHeightOffset = heightVal;
+                                rawImg.uvRect = new Rect(0f, 0f, widthVal, heightVal);
+                            }
                             break;
                         }
                 }
@@ -246,13 +276,21 @@ public class QyFtUiToUGUI : MonoBehaviour
                     }
                 case ImgType.NumRawImage:
                     {
-                        float widthVal = m_UVData.GetUvOffsetX();
-                        float heightVal = m_UVData.GetUvOffsetY();
-                        rectWidthOffset = widthVal;
-                        rectHeightOffset = heightVal;
-                        rawImg.uvRect = new Rect(0f, 0f, widthVal, heightVal);
-                        //rectWidthOffset = 0.1f;
-                        //rawImg.uvRect = new Rect(0f, 0f, 0.1f, 1f);
+                        if (m_UVData.uvX == 1 && m_UVData.uvY == 1)
+                        {
+                            //默认为横向10个数字
+                            rectWidthOffset = 0.1f;
+                            rawImg.uvRect = new Rect(0f, 0f, 0.1f, 1f);
+                        }
+                        else
+                        {
+                            //可以是横向或纵向结合的数字
+                            float widthVal = m_UVData.GetUvOffsetX();
+                            float heightVal = m_UVData.GetUvOffsetY();
+                            rectWidthOffset = widthVal;
+                            rectHeightOffset = heightVal;
+                            rawImg.uvRect = new Rect(0f, 0f, widthVal, heightVal);
+                        }
                         break;
                     }
             }
@@ -272,4 +310,4 @@ public class QyFtUiToUGUI : MonoBehaviour
         }
     }
 #endif
-}
+        }
