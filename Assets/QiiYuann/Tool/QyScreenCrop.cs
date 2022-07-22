@@ -6,7 +6,17 @@ public class QyScreenCrop : MonoBehaviour
 {
     Texture2D cutImage;
     Rect rect;
- 
+
+    private void Start()
+    {
+        string path = Application.dataPath + "/../ScreenCrop";
+        if (!Directory.Exists(path))
+        {
+            Debug.Log("create ScreenCrop fold..............");
+            Directory.CreateDirectory(path);
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {

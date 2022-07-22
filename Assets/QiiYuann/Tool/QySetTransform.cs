@@ -12,8 +12,11 @@ public class QySetTransform : QyRoot
         public float m_Width = 100f;
         public float m_Height = 100f;
         public float offDisX = 0f;
+        //一行排几个元素
+        public int numX = 0;
         public float offDisY = 0f;
         public float offDisZ = 0f;
+        public bool IsOnlyChangeName = false;
         public string nameHead = "";
         public Transform[] trArray;
 
@@ -42,10 +45,24 @@ public class QySetTransform : QyRoot
 
             Vector3 startPos = Vector3.zero;
             float indexStartPos = -0.5f * (trArray.Length - 1);
-            startPos.x = offDisX * indexStartPos;
-            startPos.y = offDisY * indexStartPos;
-            startPos.z = offDisZ * indexStartPos;
-            trArray[0].localPosition = startPos;
+            if (numX > 0)
+            {
+                startPos.x = offDisX * indexStartPos;
+                startPos.y = 0f;
+                startPos.z = 0f;
+            }
+            else
+            {
+                startPos.x = offDisX * indexStartPos;
+                startPos.y = offDisY * indexStartPos;
+                startPos.z = offDisZ * indexStartPos;
+            }
+
+            if (!IsOnlyChangeName)
+            {
+                trArray[0].localPosition = startPos;
+            }
+            
             RectTransform rectTr = trArray[0].GetComponent<RectTransform>();
             if (rectTr != null)
             {
@@ -57,10 +74,24 @@ public class QySetTransform : QyRoot
             float startZ = trArray[0].localPosition.z;
             for (int i = 1; i < trArray.Length; i++)
             {
+                if (IsOnlyChangeName)
+                {
+                    break;
+                }
+
                 Vector3 lp = Vector3.zero;
-                lp.x = startX + i * offDisX;
-                lp.y = startY + i * offDisY;
-                lp.z = startZ + i * offDisZ;
+                if (numX > 0)
+                {
+                    lp.x = startX + (i % numX) * offDisX;
+                    lp.y = (i / numX) * offDisY;
+                    lp.z = (i / numX) * offDisZ;
+                }
+                else
+                {
+                    lp.x = startX + i * offDisX;
+                    lp.y = startY + i * offDisY;
+                    lp.z = startZ + i * offDisZ;
+                }
                 trArray[i].localPosition = lp;
 
                 rectTr = trArray[i].GetComponent<RectTransform>();
@@ -70,7 +101,7 @@ public class QySetTransform : QyRoot
                 }
             }
 
-            if (nameHead != "")
+            if (nameHead != "" && IsOnlyChangeName)
             {
                 for (int i = 0; i < trArray.Length; i++)
                 {
