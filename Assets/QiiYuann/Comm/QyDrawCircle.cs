@@ -20,8 +20,10 @@ public class QyDrawCircle : MonoBehaviour
         Matrix4x4 tmpMatrix = tr.localToWorldMatrix;
         Vector4 RowVal0 = tmpMatrix.GetRow(0);
         Vector4 RowVal2 = tmpMatrix.GetRow(2);
-        RowVal0.x = RowVal2.z;
+        //scale归一化
+        RowVal0.x = RowVal2.z = 1f;
         tmpMatrix.SetRow(0, RowVal0);
+        tmpMatrix.SetRow(2, RowVal2);
         Gizmos.matrix = tmpMatrix;
 
         // 设置颜色
@@ -33,8 +35,8 @@ public class QyDrawCircle : MonoBehaviour
         Vector3 firstPoint = Vector3.zero;
         for (float theta = 0; theta < 2 * Mathf.PI; theta += thetaVal)
         {
-            float x = radius * Mathf.Cos(theta) * 0.5f;
-            float z = radius * Mathf.Sin(theta) * 0.5f;
+            float x = radius * Mathf.Cos(theta);
+            float z = radius * Mathf.Sin(theta);
             Vector3 endPoint = new Vector3(x, 0, z);
             if (theta == 0)
             {
